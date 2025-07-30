@@ -17,39 +17,39 @@ class SunmiPrintHelper(private val context: Context) {
         override fun onConnected(service: SunmiPrinterService) {
             sunmiPrinterService = service
             isConnecting = false
-            Log.d("SunmiPrintHelper", "Impressora Sunmi Conectada!")
+            Log.d("SunmiPrintHelper", "Impressora Sunmi conectada com sucesso!")
             Toast.makeText(context, "Impressora Sunmi Conectada!", Toast.LENGTH_SHORT).show()
         }
 
         override fun onDisconnected() {
             sunmiPrinterService = null
             isConnecting = false
-            Log.d("SunmiPrintHelper", "Impressora Sunmi Desconectada!")
+            Log.d("SunmiPrintHelper", "Impressora Sunmi desconectada.")
             Toast.makeText(context, "Impressora Sunmi Desconectada!", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun initPrinter() {
-        if (sunmiPrinterService != null || isConnecting) {
-            Log.d(
-                "SunmiPrintHelper",
-                "Já conectado ou em processo de conexão. Ignorando initPrinter."
-            )
+        if (sunmiPrinterService != null) {
+            Log.d("SunmiPrintHelper", "Impressora já está conectada. Nenhuma ação necessária.")
+            return
+        }
+        if (isConnecting) {
+            Log.d("SunmiPrintHelper", "Já em processo de conexão. Aguardando...")
             return
         }
 
         isConnecting = true
         try {
-            val result =
-                InnerPrinterManager.getInstance().bindService(context, innerPrinterCallback)
+            val result = InnerPrinterManager.getInstance().bindService(context, innerPrinterCallback)
             if (result) {
-                Log.d("SunmiPrintHelper", "Chamada bindService bem-sucedida.")
+                Log.d("SunmiPrintHelper", "Chamada bindService para impressora bem-sucedida.")
             } else {
-                Log.e("SunmiPrintHelper", "Falha ao chamar bindService.")
+                Log.e("SunmiPrintHelper", "Falha ao chamar bindService para impressora.")
                 isConnecting = false
                 Toast.makeText(
                     context,
-                    "Falha ao iniciar conexão com a impressora.",
+                    "Falha ao iniciar conexão com a impressora. Verifique o dispositivo.",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -59,7 +59,7 @@ class SunmiPrintHelper(private val context: Context) {
             Log.e("SunmiPrintHelper", "Erro ao tentar conectar à impressora: ${e.message}")
             Toast.makeText(
                 context,
-                "Erro ao conectar à impressora: ${e.message}",
+                "Erro crítico ao conectar à impressora: ${e.message}",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -67,7 +67,7 @@ class SunmiPrintHelper(private val context: Context) {
 
     fun deinitPrinter() {
         if (sunmiPrinterService == null) {
-            Log.d("SunmiPrintHelper", "Impressora já desconectada. Ignorando deinitPrinter.")
+            Log.d("SunmiPrintHelper", "Impressora já desconectada. Nenhuma ação necessária.")
             return
         }
 
@@ -75,7 +75,7 @@ class SunmiPrintHelper(private val context: Context) {
             InnerPrinterManager.getInstance().unBindService(context, innerPrinterCallback)
             sunmiPrinterService = null
             isConnecting = false
-            Log.d("SunmiPrintHelper", "Serviço da impressora desvinculado.")
+            Log.d("SunmiPrintHelper", "Serviço da impressora Sunmi desvinculado com sucesso.")
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("SunmiPrintHelper", "Erro ao desconectar da impressora: ${e.message}")
@@ -91,7 +91,7 @@ class SunmiPrintHelper(private val context: Context) {
         if (sunmiPrinterService == null) {
             Toast.makeText(
                 context,
-                "Impressora não conectada. Tentando reconectar...",
+                "Impressora não conectada. Tentando reconectar e imprimir...",
                 Toast.LENGTH_SHORT
             ).show()
             initPrinter()
@@ -104,6 +104,7 @@ class SunmiPrintHelper(private val context: Context) {
             sunmiPrinterService?.cutPaper(null)
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.e("SunmiPrintHelper", "Erro ao imprimir texto: ${e.message}")
             Toast.makeText(context, "Erro ao imprimir texto: ${e.message}", Toast.LENGTH_LONG)
                 .show()
         }
@@ -113,7 +114,7 @@ class SunmiPrintHelper(private val context: Context) {
         if (sunmiPrinterService == null) {
             Toast.makeText(
                 context,
-                "Impressora não conectada. Tentando reconectar...",
+                "Impressora não conectada. Tentando reconectar e imprimir...",
                 Toast.LENGTH_SHORT
             ).show()
             initPrinter()
@@ -126,8 +127,37 @@ class SunmiPrintHelper(private val context: Context) {
             sunmiPrinterService?.cutPaper(null)
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.e("SunmiPrintHelper", "Erro ao imprimir imagem: ${e.message}")
             Toast.makeText(context, "Erro ao imprimir imagem: ${e.message}", Toast.LENGTH_LONG)
                 .show()
+        }
+    }
+
+    fun cutPaper() {
+        if (sunmiPrinterService == null) {
+            Toast.makeText(context, "Impressora não conectada.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            sunmiPrinterService?.cutPaper(null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("SunmiPrintHelper", "Erro ao cortar papel: ${e.message}")
+            Toast.makeText(context, "Erro ao cortar papel: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun lineWrap(nLines: Int) {
+        if (sunmiPrinterService == null) {
+            Toast.makeText(context, "Impressora não conectada.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            sunmiPrinterService?.lineWrap(nLines, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("SunmiPrintHelper", "Erro ao avançar linhas: ${e.message}")
+            Toast.makeText(context, "Erro ao avançar linhas: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 }

@@ -10,6 +10,18 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color // Importe Color se ainda não estiver importado
+
+// As cores específicas do seu app (presumindo que Coral, CinzaClaro, etc., estão definidos em Colors.kt)
+// Você pode precisar importá-las se não estiverem no mesmo arquivo
+// import com.app.supercompra.ui.theme.Coral
+// import com.app.supercompra.ui.theme.CinzaClaro
+// import com.app.supercompra.ui.theme.CinzaEscuro
+// import com.app.supercompra.ui.theme.Pink40
+// import com.app.supercompra.ui.theme.Purple40
+// import com.app.supercompra.ui.theme.Purple80
+// import com.app.supercompra.ui.theme.PurpleGrey40
+// import com.app.supercompra.ui.theme.PurpleGrey80
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -19,9 +31,9 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary = Coral,
-    secondary = Marinho,
+    secondary = Color.White, // <--- **MUDANÇA AQUI:** Alterado de 'Marinho' para uma cor neutra
     tertiary = Pink40,
-    background = CinzaClaro,
+    background = CinzaClaro, // <--- Esta é a cor de fundo que o Surface vai usar
     onBackground = CinzaEscuro // Corrigido para uma cor de texto/conteúdo contrastante
 )
 

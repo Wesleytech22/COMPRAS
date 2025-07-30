@@ -25,14 +25,16 @@ import androidx.compose.ui.unit.dp
 import com.app.supercompra.R
 import com.app.supercompra.Screen
 import com.app.supercompra.ui.theme.SuperCompraTheme
+import androidx.compose.ui.graphics.Color // Importe Color, se ainda não estiver importado
 
 @Composable
 fun WelcomeScreen(modifier: Modifier = Modifier, onNavigateTo: (Screen) -> Unit) {
     val context = LocalContext.current
 
+    // O Surface agora usará a cor de fundo definida no seu tema (CinzaClaro)
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.background // Isso garante que o Surface siga a cor de background do tema
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

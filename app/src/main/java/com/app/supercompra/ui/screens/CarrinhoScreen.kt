@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState // Importar collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,8 +47,12 @@ fun CarrinhoScreen(
     var enderecoCliente by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
 
-    val carrinho = viewModel.carrinho
+    // --- CORREÇÃO AQUI ---
+    // Coletar o StateFlow do carrinho
+    val carrinho by viewModel.carrinho.collectAsState()
+    // --- FIM DA CORREÇÃO ---
 
+    // 'carrinho' agora é a List<ProdutoPedido>, então 'isEmpty()' e 'it.quantidade' funcionam
     val totalCarrinho = carrinho.sumOf { it.quantidade * it.preco }
     val formattedTotal = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(totalCarrinho)
 
@@ -62,7 +67,7 @@ fun CarrinhoScreen(
         Titulo(texto = "Seu Carrinho")
         Spacer(modifier = Modifier.size(16.dp))
 
-        if (carrinho.isEmpty()) {
+        if (carrinho.isEmpty()) { // isEmpty() agora será reconhecido
             Text("Seu carrinho está vazio. Adicione itens da lista de compras!", style = Typography.bodyMedium)
             Spacer(modifier = Modifier.size(24.dp))
             Button(onClick = { viewModel.navigateTo(Screen.ListaCompras) }) {
@@ -74,7 +79,7 @@ fun CarrinhoScreen(
                     .heightIn(max = 300.dp)
                     .fillMaxWidth()
             ) {
-                items(carrinho) { produto ->
+                items(carrinho) { produto -> // 'it' (agora 'produto') será reconhecido
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -95,7 +100,7 @@ fun CarrinhoScreen(
                             viewModel.decrementarProdutoNoCarrinho(produto)
                         })
                         Text(
-                            text = produto.quantidade.toString(),
+                            text = produto.quantidade.toString(), // quantidade será reconhecida
                             style = Typography.bodyMedium,
                             modifier = Modifier.padding(horizontal = 4.dp)
                         )
@@ -151,7 +156,7 @@ fun CarrinhoScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = carrinho.isNotEmpty()
+                enabled = carrinho.isNotEmpty() // isNotEmpty() também será reconhecido
             ) {
                 Text("Finalizar Pedido")
             }
@@ -160,4 +165,3 @@ fun CarrinhoScreen(
         }
     }
 }
-

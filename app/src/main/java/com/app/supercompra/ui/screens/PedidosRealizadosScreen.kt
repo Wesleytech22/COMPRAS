@@ -25,6 +25,8 @@ import com.app.supercompra.Screen
 import com.app.supercompra.ui.Titulo
 import com.app.supercompra.ui.theme.Typography
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -68,15 +70,43 @@ fun PedidosRealizadosScreen(
         Spacer(modifier = Modifier.size(16.dp))
 
         if (pedido != null && pedido.produtos.isNotEmpty()) {
-            Text("Data do Pedido: ${pedido.dataPedido}", style = Typography.bodyMedium)
-            Spacer(modifier = Modifier.size(8.dp))
-            Text("Produtos:", style = Typography.bodyMedium)
-            pedido.produtos.forEach { produto ->
-                Text("- ${produto.nome}: ${produto.quantidade} x ${NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(produto.preco)}", style = Typography.bodySmall)
+            // --- Formatação da Data e Hora ---
+            val localePtBr = Locale("pt", "BR")
+            val sdfFull = SimpleDateFormat("EEEE - dd/MM/yyyy 'às' HH:mm:ss", localePtBr)
+            val sdfDayOfWeek = SimpleDateFormat("EEEE", localePtBr)
+            val sdfDate = SimpleDateFormat("dd/MM/yyyy", localePtBr)
+            val sdfTime = SimpleDateFormat("HH:mm:ss 'HRS'", localePtBr)
+
+            val parsedDate: Date? = try {
+                sdfFull.parse(pedido.dataPedido)
+            } catch (e: Exception) {
+                null
             }
+
+            if (parsedDate != null) {
+                Text(text = "Dia da Semana: ${sdfDayOfWeek.format(parsedDate)}", style = Typography.bodyMedium)
+                Text(text = "Data do Pedido: ${sdfDate.format(parsedDate)}", style = Typography.bodyMedium)
+                Text(text = "Horário: ${sdfTime.format(parsedDate)}", style = Typography.bodyMedium)
+            } else {
+                Text(text = "Data do Pedido: ${pedido.dataPedido}", style = Typography.bodyMedium)
+            }
+            // --- Fim da Formatação da Data e Hora ---
+
+            Spacer(modifier = Modifier.size(8.dp))
+            Text("Produtos:", style = Typography.bodyMedium, fontWeight = FontWeight.Bold) // Deixa "Produtos:" em negrito
+            Spacer(modifier = Modifier.size(4.dp)) // Espaçamento menor após "Produtos:"
+
+            // Lista de produtos
+            pedido.produtos.forEach { produto ->
+                Text(
+                    text = "- ${produto.nome}: ${produto.quantidade} x ${NumberFormat.getCurrencyInstance(localePtBr).format(produto.preco)}",
+                    style = Typography.bodySmall
+                )
+            }
+
             val totalPedido = pedido.produtos.sumOf { it.quantidade * it.preco }
             Text(
-                "Total do Pedido: ${NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(totalPedido)}",
+                "Total do Pedido: ${NumberFormat.getCurrencyInstance(localePtBr).format(totalPedido)}",
                 style = Typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 8.dp)
@@ -109,6 +139,7 @@ fun PedidosRealizadosScreen(
             Button(
                 onClick = {
                     if (pedido != null) {
+                        // Verifica se a SunmiPrintHelper e o pedido não são nulos antes de imprimir
                         sunmiPrintHelper.printText(formatPedidoToPrint(pedido))
                     }
                 },
@@ -130,12 +161,23 @@ fun PedidosRealizadosScreen(
     }
 }
 
-
+// Funções auxiliares mantidas, mas com ajuste de Locale para formatação
 fun formatPedidoToPrint(pedido: Pedido): String {
+    val localePtBr = Locale("pt", "BR")
     val sb = StringBuilder()
+
+    // Formatação da data para impressão (pode ser mais simples ou detalhada, conforme necessário para a impressora)
+    val sdfPrint = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", localePtBr)
+    val parsedDate: Date? = try {
+        SimpleDateFormat("EEEE - dd/MM/yyyy 'às' HH:mm:ss", localePtBr).parse(pedido.dataPedido)
+    } catch (e: Exception) {
+        null
+    }
+    val formattedDateForPrint = parsedDate?.let { sdfPrint.format(it) } ?: pedido.dataPedido
+
     sb.append("         DOCE MARIA      \n")
     sb.append("-----------------------------\n")
-    sb.append("Data do Pedido: ${pedido.dataPedido}\n")
+    sb.append("Data do Pedido: $formattedDateForPrint\n")
     sb.append("Cliente: ${pedido.nomeCliente}\n")
     sb.append("Endereço: ${pedido.enderecoCliente}\n")
     sb.append("-------------------------------\n")
@@ -143,15 +185,19 @@ fun formatPedidoToPrint(pedido: Pedido): String {
     pedido.produtos.forEach { produto ->
         val itemTotal = produto.quantidade * produto.preco
         sb.append(String.format(
-            "%s x %d | %.2f = %.2f\n",
+            localePtBr, // Usar o Locale aqui também para formatação de números
+            "%-20s x %d = %s\n", // Ajuste o espaçamento conforme necessário
             produto.nome,
             produto.quantidade,
-            produto.preco,
-            itemTotal
+            NumberFormat.getCurrencyInstance(localePtBr).format(itemTotal)
         ))
     }
     sb.append("------------------------------\n")
-    sb.append(String.format("TOTAL: %.2f\n", totalPedido(pedido)))
+    sb.append(String.format(
+        localePtBr, // Usar o Locale aqui também
+        "TOTAL: %s\n",
+        NumberFormat.getCurrencyInstance(localePtBr).format(totalPedido(pedido))
+    ))
     sb.append("------------------------------\n")
     sb.append("     Doce Maria Agradece!\n")
     sb.append("------------------------------\n")
@@ -161,4 +207,3 @@ fun formatPedidoToPrint(pedido: Pedido): String {
 fun totalPedido(pedido: Pedido): Double {
     return pedido.produtos.sumOf { it.quantidade * it.preco }
 }
-

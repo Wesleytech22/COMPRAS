@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState // Importar collectAsState
+import androidx.compose.runtime.getValue // Importar getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,13 +24,20 @@ import com.app.supercompra.ui.ImageTopo
 import com.app.supercompra.ui.PesquisaItem
 import com.app.supercompra.ui.Titulo
 import com.app.supercompra.ui.ItemDaLista
+import com.app.supercompra.ProdutoPedido // Certifique-se de que ProdutoPedido está importado
 
 @Composable
 fun ListaComprasScreen(
     viewModel: SuperCompraViewModel
 ) {
     val produtosDisponiveis = viewModel.produtosDisponiveis
-    val carrinho = viewModel.carrinho
+
+    // --- CORREÇÃO AQUI: Coletar o StateFlow do carrinho ---
+    val carrinho by viewModel.carrinho.collectAsState()
+    // --- FIM DA CORREÇÃO ---
+
+    // Calcula o total de itens no carrinho para exibir no botão "Ver Carrinho"
+    val totalItemsNoCarrinho = carrinho.sumOf { it.quantidade }
 
     Column(
         modifier = Modifier
@@ -53,6 +62,7 @@ fun ListaComprasScreen(
                 .weight(1f)
         ) {
             items(produtosDisponiveis) { produtoDisponivel ->
+                // 'carrinho' agora é a List<ProdutoPedido>, então 'find' funciona
                 val produtoNoCarrinho = carrinho.find { it.nome == produtoDisponivel.nome }
                 val initialQuantity = produtoNoCarrinho?.quantidade ?: 0
 
@@ -61,7 +71,8 @@ fun ListaComprasScreen(
                     initialQuantity = initialQuantity,
                     onItemClick = {
                         viewModel.adicionarOuIncrementarProdutoNoCarrinho(produtoDisponivel)
-                        viewModel.navigateTo(Screen.Carrinho)
+                        // --- ALTERAÇÃO AQUI: Removido a navegação para o carrinho ao clicar ---
+                        // A contagem no TopAppBar já irá refletir a adição
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -83,7 +94,8 @@ fun ListaComprasScreen(
                     .weight(1f)
                     .padding(end = 8.dp)
             ) {
-                Text("Ver Carrinho")
+                // Exibe a contagem no botão "Ver Carrinho"
+                Text("Ver Carrinho (${totalItemsNoCarrinho})")
             }
             Button(
                 onClick = { viewModel.navigateTo(Screen.Relatorios) },
@@ -96,4 +108,3 @@ fun ListaComprasScreen(
         }
     }
 }
-

@@ -1,6 +1,5 @@
 package com.app.supercompra
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -8,11 +7,12 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update // Importante para atualizar o StateFlow de forma segura
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
+// Classes de dados e Screen devem estar aqui (ou em arquivos separados, se preferir)
 data class ProdutoPedido(val nome: String, var quantidade: Int = 0, val preco: Double = 0.0)
 
 data class Pedido(
@@ -21,7 +21,6 @@ data class Pedido(
     val enderecoCliente: String = "",
     val dataPedido: String = ""
 )
-
 
 sealed class Screen {
     object Welcome : Screen()
@@ -35,26 +34,20 @@ sealed class Screen {
 
 class SuperCompraViewModel : ViewModel() {
 
-
     private val _currentScreen = MutableStateFlow<Screen>(Screen.Welcome)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
 
+    private val _carrinho = MutableStateFlow<List<ProdutoPedido>>(emptyList())
+    val carrinho: StateFlow<List<ProdutoPedido>> = _carrinho.asStateFlow()
 
-    private val _carrinho = mutableStateListOf<ProdutoPedido>()
-    val carrinho: List<ProdutoPedido>
-        get() = _carrinho
-
-
-    private val _pedidosRealizados = mutableStateListOf<Pedido>()
+    private val _pedidosRealizados = mutableListOf<Pedido>()
     val pedidosRealizados: List<Pedido>
         get() = _pedidosRealizados
-
 
     var pedidoEmVisualizacao by mutableStateOf<Pedido?>(null)
         private set
 
-
-    val produtosDisponiveis = mutableStateListOf(
+    val produtosDisponiveis = mutableListOf(
         ProdutoPedido("Torta de limão", preco = 35.00),
         ProdutoPedido("Torta de Morango", preco = 40.00),
         ProdutoPedido("Copo da Felicidade", preco = 15.00),
@@ -70,8 +63,6 @@ class SuperCompraViewModel : ViewModel() {
         ProdutoPedido("Biscoitos Amanteigados", preco = 8.00),
         ProdutoPedido("Macarons Coloridos", preco = 6.00)
     )
-
-
 
     fun navigateTo(screen: Screen) {
         _currentScreen.value = screen
@@ -90,49 +81,62 @@ class SuperCompraViewModel : ViewModel() {
     }
 
     fun adicionarOuIncrementarProdutoNoCarrinho(produto: ProdutoPedido) {
-        val existing = _carrinho.find { it.nome == produto.nome }
-        if (existing != null) {
-            existing.quantidade++
-        } else {
-            _carrinho.add(produto.copy(quantidade = 1))
+        _carrinho.update { currentList ->
+            val existing = currentList.find { it.nome == produto.nome }
+            if (existing != null) {
+                currentList.map {
+                    if (it.nome == produto.nome) existing.copy(quantidade = existing.quantidade + 1) else it
+                }
+            } else {
+                currentList + produto.copy(quantidade = 1)
+            }
         }
     }
 
     fun decrementarProdutoNoCarrinho(produto: ProdutoPedido) {
-        val existing = _carrinho.find { it.nome == produto.nome }
-        if (existing != null) {
-            if (existing.quantidade > 1) {
-                existing.quantidade--
-            } else {
-                _carrinho.remove(existing)
+        _carrinho.update { currentList ->
+            currentList.mapNotNull { item ->
+                if (item.nome == produto.nome) {
+                    if (item.quantidade > 1) {
+                        item.copy(quantidade = item.quantidade - 1)
+                    } else {
+                        null // Remove o item se a quantidade chegar a 0
+                    }
+                } else {
+                    item
+                }
             }
         }
     }
 
     fun removerProdutoDoCarrinho(produto: ProdutoPedido) {
-        _carrinho.remove(produto)
+        _carrinho.update { currentList ->
+            currentList.filter { it.nome != produto.nome }
+        }
     }
 
     fun finalizarPedido(nomeCliente: String, enderecoCliente: String): Boolean {
-        if (nomeCliente.isBlank() || enderecoCliente.isBlank() || _carrinho.isEmpty()) {
+        val currentCarrinho = _carrinho.value
+
+        if (nomeCliente.isBlank() || enderecoCliente.isBlank() || currentCarrinho.isEmpty()) {
             return false
         }
 
         val novoPedido = Pedido(
-            produtos = _carrinho.toList().map { it.copy() },
+            produtos = currentCarrinho.map { it.copy() },
             nomeCliente = nomeCliente,
             enderecoCliente = enderecoCliente,
             dataPedido = getCurrentFormattedTime()
         )
 
         pedidoEmVisualizacao = novoPedido
-        _carrinho.clear()
+        _pedidosRealizados.add(novoPedido)
+        _carrinho.value = emptyList()
         return true
     }
 
     fun editarPedido(pedido: Pedido) {
-        _carrinho.clear()
-        _carrinho.addAll(pedido.produtos.map { it.copy() })
+        _carrinho.value = pedido.produtos.map { it.copy() }
         _pedidosRealizados.remove(pedido)
     }
 

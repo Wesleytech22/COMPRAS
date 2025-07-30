@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,7 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -26,24 +26,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.supercompra.ui.theme.Marinho
 import com.app.supercompra.ui.theme.SuperCompraTheme
 
-// =========================================================
-// IMPORTS DOS COMPONENTES DE UI (da pasta 'ui')
-// =========================================================
 import com.app.supercompra.ui.ImageTopo
 import com.app.supercompra.ui.MyIcon
 import com.app.supercompra.ui.Titulo
 import com.app.supercompra.ui.PesquisaItem
 import com.app.supercompra.ui.ItemDaLista
 
-// =========================================================
-// IMPORTS DAS TELAS (da pasta 'ui/screens')
-// =========================================================
 import com.app.supercompra.ui.screens.WelcomeScreen
 import com.app.supercompra.ui.screens.AboutUsScreen
 import com.app.supercompra.ui.screens.ListaComprasScreen
@@ -51,7 +46,6 @@ import com.app.supercompra.ui.screens.CarrinhoScreen
 import com.app.supercompra.ui.screens.PedidosRealizadosScreen
 import com.app.supercompra.ui.screens.RelatoriosScreen
 import com.app.supercompra.ui.screens.CardapioScreen
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,10 +83,13 @@ fun MainAppContent(
 ) {
     val currentScreen by viewModel.currentScreen.collectAsState()
 
+    val commonBackgroundColor = Transparent
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Doce Maria") },
+                // FIX: Provide an empty lambda for the title parameter
+                title = { }, // This resolves the "No value passed for parameter 'title'" error
                 navigationIcon = {
                     if (currentScreen != Screen.Welcome) {
                         IconButton(onClick = { viewModel.onBackPress() }) {
@@ -100,7 +97,7 @@ fun MainAppContent(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Voltar para a tela anterior",
                                 modifier = Modifier.size(24.dp),
-                                tint = Color.White
+                                tint = Color.Black
                             )
                         }
                     }
@@ -112,19 +109,26 @@ fun MainAppContent(
                                 imageVector = Icons.Default.ShoppingCart,
                                 contentDescription = "Carrinho de Compras",
                                 modifier = Modifier.size(24.dp),
-                                tint = Color.White
+                                tint = Color.Black
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Marinho, titleContentColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = commonBackgroundColor,
+                    actionIconContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
+                ),
+                modifier = Modifier.background(Transparent),
+                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(commonBackgroundColor),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (currentScreen) {
@@ -140,7 +144,7 @@ fun MainAppContent(
                     sunmiPrintHelper = sunmiPrintHelper
                 )
                 is Screen.Relatorios -> RelatoriosScreen()
-                is Screen.Cardapio -> CardapioScreen( // Linha 50:39 (se as outras foram movidas)
+                is Screen.Cardapio -> CardapioScreen(
                     viewModel = viewModel
                 )
                 is Screen.ConhecaALoja -> AboutUsScreen(
