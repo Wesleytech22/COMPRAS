@@ -7,18 +7,19 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update // Importante para atualizar o StateFlow de forma segura
+import kotlinx.coroutines.flow.update
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Classes de dados e Screen devem estar aqui (ou em arquivos separados, se preferir)
+
 data class ProdutoPedido(val nome: String, var quantidade: Int = 0, val preco: Double = 0.0)
 
 data class Pedido(
     val produtos: List<ProdutoPedido>,
     val nomeCliente: String = "",
     val enderecoCliente: String = "",
+    val telefoneCliente: String = "", // Garante que é String aqui
     val dataPedido: String = ""
 )
 
@@ -100,7 +101,7 @@ class SuperCompraViewModel : ViewModel() {
                     if (item.quantidade > 1) {
                         item.copy(quantidade = item.quantidade - 1)
                     } else {
-                        null // Remove o item se a quantidade chegar a 0
+                        null
                     }
                 } else {
                     item
@@ -115,10 +116,10 @@ class SuperCompraViewModel : ViewModel() {
         }
     }
 
-    fun finalizarPedido(nomeCliente: String, enderecoCliente: String): Boolean {
+    fun finalizarPedido(nomeCliente: String, enderecoCliente: String, telefoneCliente: String): Boolean {
         val currentCarrinho = _carrinho.value
 
-        if (nomeCliente.isBlank() || enderecoCliente.isBlank() || currentCarrinho.isEmpty()) {
+        if (nomeCliente.isBlank() || enderecoCliente.isBlank() || telefoneCliente.isBlank() || currentCarrinho.isEmpty()) {
             return false
         }
 
@@ -126,6 +127,7 @@ class SuperCompraViewModel : ViewModel() {
             produtos = currentCarrinho.map { it.copy() },
             nomeCliente = nomeCliente,
             enderecoCliente = enderecoCliente,
+            telefoneCliente = telefoneCliente, // Passa o valor do telefone
             dataPedido = getCurrentFormattedTime()
         )
 

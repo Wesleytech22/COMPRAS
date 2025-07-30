@@ -1,5 +1,7 @@
 package com.app.supercompra.ui.screens
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState // Importar collectAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +40,7 @@ import com.app.supercompra.ui.MyIcon
 import com.app.supercompra.ui.theme.Typography
 import java.text.NumberFormat
 import java.util.Locale
+import com.app.supercompra.util.TelefoneVisualTransformation
 
 @Composable
 fun CarrinhoScreen(
@@ -45,14 +48,11 @@ fun CarrinhoScreen(
 ) {
     var nomeCliente by remember { mutableStateOf("") }
     var enderecoCliente by remember { mutableStateOf("") }
+    var telefoneCliente by remember { mutableStateOf("") } // Estado para o telefone
     val scrollState = rememberScrollState()
 
-    // --- CORREÇÃO AQUI ---
-    // Coletar o StateFlow do carrinho
     val carrinho by viewModel.carrinho.collectAsState()
-    // --- FIM DA CORREÇÃO ---
 
-    // 'carrinho' agora é a List<ProdutoPedido>, então 'isEmpty()' e 'it.quantidade' funcionam
     val totalCarrinho = carrinho.sumOf { it.quantidade * it.preco }
     val formattedTotal = NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(totalCarrinho)
 
@@ -67,7 +67,7 @@ fun CarrinhoScreen(
         Titulo(texto = "Seu Carrinho")
         Spacer(modifier = Modifier.size(16.dp))
 
-        if (carrinho.isEmpty()) { // isEmpty() agora será reconhecido
+        if (carrinho.isEmpty()) {
             Text("Seu carrinho está vazio. Adicione itens da lista de compras!", style = Typography.bodyMedium)
             Spacer(modifier = Modifier.size(24.dp))
             Button(onClick = { viewModel.navigateTo(Screen.ListaCompras) }) {
@@ -79,7 +79,7 @@ fun CarrinhoScreen(
                     .heightIn(max = 300.dp)
                     .fillMaxWidth()
             ) {
-                items(carrinho) { produto -> // 'it' (agora 'produto') será reconhecido
+                items(carrinho) { produto ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -100,7 +100,7 @@ fun CarrinhoScreen(
                             viewModel.decrementarProdutoNoCarrinho(produto)
                         })
                         Text(
-                            text = produto.quantidade.toString(), // quantidade será reconhecida
+                            text = produto.quantidade.toString(),
                             style = Typography.bodyMedium,
                             modifier = Modifier.padding(horizontal = 4.dp)
                         )
@@ -117,8 +117,8 @@ fun CarrinhoScreen(
 
             Spacer(modifier = Modifier.size(24.dp))
             Text(
-                text = "Total do Carrinho: $formattedTotal",
-                style = Typography.headlineMedium,
+                text = "Valor toral: $formattedTotal",
+                style = Typography.headlineSmall,
                 modifier = Modifier.align(Alignment.End)
             )
             Spacer(modifier = Modifier.size(24.dp))
@@ -142,21 +142,37 @@ fun CarrinhoScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            OutlinedTextField(
+                value = telefoneCliente,
+                onValueChange = { newValue ->
+                    // Armazena APENAS os dígitos no estado
+                    telefoneCliente = newValue.filter { it.isDigit() }
+                },
+                label = { Text("Telefone") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                visualTransformation = TelefoneVisualTransformation(), // Aplica a máscara visual
+                singleLine = true
+            )
             Spacer(modifier = Modifier.size(24.dp))
 
             Button(
                 onClick = {
-                    val success = viewModel.finalizarPedido(nomeCliente, enderecoCliente)
+                    val success = viewModel.finalizarPedido(nomeCliente, enderecoCliente, telefoneCliente) // Passa o telefone
                     if (success) {
                         viewModel.navigateTo(Screen.PedidosRealizados)
                         nomeCliente = ""
                         enderecoCliente = ""
+                        telefoneCliente = "" // Limpa o campo de telefone
                     } else {
                         println("Erro ao finalizar pedido: Preencha todos os campos e adicione itens ao carrinho.")
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = carrinho.isNotEmpty() // isNotEmpty() também será reconhecido
+                enabled = carrinho.isNotEmpty()
             ) {
                 Text("Finalizar Pedido")
             }

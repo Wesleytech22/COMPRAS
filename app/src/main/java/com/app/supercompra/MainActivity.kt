@@ -30,22 +30,24 @@ import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.app.supercompra.ui.theme.Marinho
-import com.app.supercompra.ui.theme.SuperCompraTheme
-
-import com.app.supercompra.ui.ImageTopo
-import com.app.supercompra.ui.MyIcon
-import com.app.supercompra.ui.Titulo
-import com.app.supercompra.ui.PesquisaItem
-import com.app.supercompra.ui.ItemDaLista
-
-import com.app.supercompra.ui.screens.WelcomeScreen
 import com.app.supercompra.ui.screens.AboutUsScreen
-import com.app.supercompra.ui.screens.ListaComprasScreen
+import com.app.supercompra.ui.screens.CardapioScreen
 import com.app.supercompra.ui.screens.CarrinhoScreen
+import com.app.supercompra.ui.screens.ListaComprasScreen
 import com.app.supercompra.ui.screens.PedidosRealizadosScreen
 import com.app.supercompra.ui.screens.RelatoriosScreen
-import com.app.supercompra.ui.screens.CardapioScreen
+import com.app.supercompra.ui.screens.WelcomeScreen
+import com.app.supercompra.ui.theme.SuperCompraTheme
+
+// Removidos os imports que não são diretamente usados nesta classe:
+// import com.app.supercompra.ui.Titulo
+// import com.app.supercompra.ui.PesquisaItem
+// import com.app.supercompra.ui.ItemDaLista
+// import com.app.supercompra.ui.ImageTopo
+// import com.app.supercompra.ui.MyIcon
+// import com.app.supercompra.ui.theme.Marinho
+// import com.app.supercompra.ui.theme.Typography
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,8 +90,7 @@ fun MainAppContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                // FIX: Provide an empty lambda for the title parameter
-                title = { }, // This resolves the "No value passed for parameter 'title'" error
+                title = { },
                 navigationIcon = {
                     if (currentScreen != Screen.Welcome) {
                         IconButton(onClick = { viewModel.onBackPress() }) {

@@ -28,6 +28,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.util.Log 
 
 @Composable
 fun PedidosRealizadosScreen(
@@ -64,13 +65,23 @@ fun PedidosRealizadosScreen(
             readOnly = true,
             modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(modifier = Modifier.size(8.dp))
+
+        OutlinedTextField(
+            value = pedido?.telefoneCliente ?: "N/A",
+            onValueChange = { },
+            label = { Text("Telefone") },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(modifier = Modifier.size(24.dp))
 
         Titulo(texto = "Detalhes do Pedido")
         Spacer(modifier = Modifier.size(16.dp))
 
         if (pedido != null && pedido.produtos.isNotEmpty()) {
-            // --- Formatação da Data e Hora ---
             val localePtBr = Locale("pt", "BR")
             val sdfFull = SimpleDateFormat("EEEE - dd/MM/yyyy 'às' HH:mm:ss", localePtBr)
             val sdfDayOfWeek = SimpleDateFormat("EEEE", localePtBr)
@@ -84,19 +95,17 @@ fun PedidosRealizadosScreen(
             }
 
             if (parsedDate != null) {
-                Text(text = "Dia da Semana: ${sdfDayOfWeek.format(parsedDate)}", style = Typography.bodyMedium)
-                Text(text = "Data do Pedido: ${sdfDate.format(parsedDate)}", style = Typography.bodyMedium)
-                Text(text = "Horário: ${sdfTime.format(parsedDate)}", style = Typography.bodyMedium)
+                Text(text = "Dia da Semana: ${sdfDayOfWeek.format(parsedDate)}", style = Typography.bodySmall)
+                Text(text = "Data do Pedido: ${sdfDate.format(parsedDate)}", style = Typography.bodySmall)
+                Text(text = "Horário: ${sdfTime.format(parsedDate)}", style = Typography.bodySmall)
             } else {
-                Text(text = "Data do Pedido: ${pedido.dataPedido}", style = Typography.bodyMedium)
+                Text(text = "Data do Pedido: ${pedido.dataPedido}", style = Typography.bodySmall)
             }
-            // --- Fim da Formatação da Data e Hora ---
 
             Spacer(modifier = Modifier.size(8.dp))
-            Text("Produtos:", style = Typography.bodyMedium, fontWeight = FontWeight.Bold) // Deixa "Produtos:" em negrito
-            Spacer(modifier = Modifier.size(4.dp)) // Espaçamento menor após "Produtos:"
+            Text("Produtos:", style = Typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.size(4.dp))
 
-            // Lista de produtos
             pedido.produtos.forEach { produto ->
                 Text(
                     text = "- ${produto.nome}: ${produto.quantidade} x ${NumberFormat.getCurrencyInstance(localePtBr).format(produto.preco)}",
@@ -139,8 +148,9 @@ fun PedidosRealizadosScreen(
             Button(
                 onClick = {
                     if (pedido != null) {
-                        // Verifica se a SunmiPrintHelper e o pedido não são nulos antes de imprimir
-                        sunmiPrintHelper.printText(formatPedidoToPrint(pedido))
+                        val textoParaImprimir = formatPedidoToPrint(pedido)
+                        Log.d("PrintDebug", "Conteúdo a ser impresso:\n$textoParaImprimir")
+                        sunmiPrintHelper.printText(textoParaImprimir)
                     }
                 },
                 modifier = Modifier
@@ -161,12 +171,11 @@ fun PedidosRealizadosScreen(
     }
 }
 
-// Funções auxiliares mantidas, mas com ajuste de Locale para formatação
+
 fun formatPedidoToPrint(pedido: Pedido): String {
     val localePtBr = Locale("pt", "BR")
     val sb = StringBuilder()
 
-    // Formatação da data para impressão (pode ser mais simples ou detalhada, conforme necessário para a impressora)
     val sdfPrint = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", localePtBr)
     val parsedDate: Date? = try {
         SimpleDateFormat("EEEE - dd/MM/yyyy 'às' HH:mm:ss", localePtBr).parse(pedido.dataPedido)
@@ -180,13 +189,14 @@ fun formatPedidoToPrint(pedido: Pedido): String {
     sb.append("Data do Pedido: $formattedDateForPrint\n")
     sb.append("Cliente: ${pedido.nomeCliente}\n")
     sb.append("Endereço: ${pedido.enderecoCliente}\n")
+    sb.append("Telefone: ${formatPhoneNumberForPrint(pedido.telefoneCliente)}\n") // Formata o telefone para a impressão
     sb.append("-------------------------------\n")
     sb.append("PRODUTOS:\n")
     pedido.produtos.forEach { produto ->
         val itemTotal = produto.quantidade * produto.preco
         sb.append(String.format(
-            localePtBr, // Usar o Locale aqui também para formatação de números
-            "%-20s x %d = %s\n", // Ajuste o espaçamento conforme necessário
+            localePtBr,
+            "%-20s x %d = %s\n",
             produto.nome,
             produto.quantidade,
             NumberFormat.getCurrencyInstance(localePtBr).format(itemTotal)
@@ -194,7 +204,7 @@ fun formatPedidoToPrint(pedido: Pedido): String {
     }
     sb.append("------------------------------\n")
     sb.append(String.format(
-        localePtBr, // Usar o Locale aqui também
+        localePtBr,
         "TOTAL: %s\n",
         NumberFormat.getCurrencyInstance(localePtBr).format(totalPedido(pedido))
     ))
@@ -202,6 +212,16 @@ fun formatPedidoToPrint(pedido: Pedido): String {
     sb.append("     Doce Maria Agradece!\n")
     sb.append("------------------------------\n")
     return sb.toString()
+}
+
+// Nova função para formatar o número de telefone para impressão (opcional, se quiser a máscara na impressão)
+fun formatPhoneNumberForPrint(phoneNumber: String): String {
+    val cleanNumber = phoneNumber.filter { it.isDigit() }
+    return when (cleanNumber.length) {
+        10 -> "(${cleanNumber.substring(0, 2)}) ${cleanNumber.substring(2, 6)}-${cleanNumber.substring(6, 10)}"
+        11 -> "(${cleanNumber.substring(0, 2)}) ${cleanNumber.substring(2, 7)}-${cleanNumber.substring(7, 11)}"
+        else -> phoneNumber // Retorna como está se não corresponder aos formatos esperados
+    }
 }
 
 fun totalPedido(pedido: Pedido): Double {
