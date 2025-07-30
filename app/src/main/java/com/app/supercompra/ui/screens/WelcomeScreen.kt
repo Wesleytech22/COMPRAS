@@ -1,6 +1,5 @@
-package com.app.supercompra
+package com.app.supercompra.ui.screens
 
-import android.R.attr.contentDescription
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.supercompra.R
+import com.app.supercompra.Screen
 import com.app.supercompra.ui.theme.SuperCompraTheme
 
 @Composable
@@ -55,13 +55,11 @@ fun WelcomeScreen(modifier: Modifier = Modifier, onNavigateTo: (Screen) -> Unit)
                 modifier = Modifier.padding(top = 8.dp, bottom = 32.dp)
             )
 
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-
                 Image(
                     painter = painterResource(id = R.drawable.whatsapp),
                     contentDescription = "WhatsApp Icon",
@@ -73,7 +71,6 @@ fun WelcomeScreen(modifier: Modifier = Modifier, onNavigateTo: (Screen) -> Unit)
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
-
 
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -93,10 +90,9 @@ fun WelcomeScreen(modifier: Modifier = Modifier, onNavigateTo: (Screen) -> Unit)
                         onNavigateTo(Screen.Cardapio)
                     }
                 ) {
-                    Text("Cardápio")
+                    Text("Cardapio")
                 }
             }
-
 
             Spacer(modifier = Modifier.height(16.dp))
             Column(
